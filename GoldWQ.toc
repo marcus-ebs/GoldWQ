@@ -1,0 +1,10 @@
+## Interface: 120001
+## Title: GoldWQ
+## Notes: Tracks gold world quests and weekly caches per character
+## Author: Marcus
+## Version: 0.3
+## X-Credits: Special Assignment quest IDs from WeeklyRewards by cybertk (github.com/cybertk/WeeklyRewards)
+## SavedVariables: GoldWQDB
+
+Caches.lua
+GoldWQ.lua
