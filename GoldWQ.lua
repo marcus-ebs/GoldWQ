@@ -505,7 +505,10 @@ end
 --   none   : not out this week
 local function saState(sa)
     local timeLeft = C_TaskQuest.GetQuestTimeLeftSeconds
-    if C_QuestLog.IsQuestFlaggedCompleted(sa.quest) then return "done" end
+    local unlockOnQuest = C_QuestLog.IsOnQuest(sa.unlock)
+    local liveOnMap = seenPOI[sa.unlock] == true or seenPOI[sa.quest] == true
+        or C_TaskQuest.IsActive(sa.unlock) == true or C_TaskQuest.IsActive(sa.quest) == true
+    if C_QuestLog.IsQuestFlaggedCompleted(sa.quest) then return "done", nil, liveOnMap end
 
     -- Once unlocked, the real assignment behaves like a world quest: it can be "active"
     -- on the map without ever being formally accepted, so IsOnQuest alone can miss it.
@@ -514,7 +517,7 @@ local function saState(sa)
 
     -- Same test WeeklyRewards uses: it is this week's assignment only if its
     -- placeholder is live, or the real quest turns out to be unlocked/live.
-    local thisWeek = C_QuestLog.IsOnQuest(sa.unlock) or timeLeft(sa.unlock) or unlocked
+    local thisWeek = unlockOnQuest or timeLeft(sa.unlock) or unlocked
     if not thisWeek then return "none" end
     local state = unlocked and "up" or "locked"
 
@@ -529,7 +532,7 @@ local function saState(sa)
         if not x then x, y = C_TaskQuest.GetQuestLocation(sa.quest, mapID) end
         e.x, e.y = x, y
     end
-    return state, e
+    return state, e, liveOnMap
 end
 
 refreshUI = function()
@@ -577,9 +580,13 @@ refreshUI = function()
     local rank = { done = 3, up = 2, locked = 1 }
     local best = {}
     for _, sa in ipairs(GoldWQ_SpecialAssignments) do
-        local state, e = saState(sa)
-        if rank[state] and (not best[sa.zone] or rank[state] > best[sa.zone].rank) then
-            best[sa.zone] = { rank = rank[state], sa = sa, state = state, e = e }
+        local state, e, liveOnMap = saState(sa)
+        local current = best[sa.zone]
+        -- Prefer assignments currently present on the map over older completion flags.
+        if rank[state] and (not current or (liveOnMap and not current.liveOnMap)
+                or (liveOnMap == current.liveOnMap and rank[state] > current.rank)) then
+            best[sa.zone] = { rank = rank[state], sa = sa, state = state, e = e,
+                              liveOnMap = liveOnMap }
         end
     end
     for _, sa in ipairs(GoldWQ_SpecialAssignments) do
