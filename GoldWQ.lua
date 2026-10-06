@@ -1055,7 +1055,7 @@ local function report()
 end
 
 ------------------------------------------------------------------
--- Minimap button (goblin)
+-- Minimap button
 --  * If LibDataBroker + LibDBIcon are loaded (most addon suites embed them) the button
 --    is registered through them, so minimap-button collectors handle it like any other.
 --  * Otherwise a button with the same name/layout (LibDBIcon10_GoldWQ) is built by hand.
